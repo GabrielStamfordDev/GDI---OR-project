@@ -105,4 +105,32 @@ SELECT S.local.predio, S.local.num_sala, S.capacidade FROM tb_sala S;
 
 INSERT INTO tb_sala VALUES (sala_tp(local_Sala_tp('Predio D', 'D010'), 25));
 
+--Testando o ORDER
 
+DECLARE
+    x sala_tp;
+    n INTEGER;
+BEGIN
+    -- Pegando a sala com maior capacidade
+    SELECT VALUE(S) INTO x 
+    FROM tb_sala S 
+    WHERE S.local.predio = 'Predio E' AND S.local.num_sala = 'D009';
+
+    -- Comparando com outra sala
+    SELECT S.comparaCapacidade(x) INTO n 
+    FROM tb_sala S 
+    WHERE S.local.predio = 'Predio D' AND S.local.num_sala = 'D010';
+
+    -- Verificando a comparação
+    IF n > 0 THEN 
+        DBMS_OUTPUT.PUT_LINE('Sala em Predio D e numero de sala D010' || 
+                             ' tem capacidade maior que a sala em ' || x.local.predio || ' e ' || x.local.num_sala);
+    ELSIF n = 0 THEN 
+         DBMS_OUTPUT.PUT_LINE('Sala em Predio D e numero de sala D010' || 
+                             ' tem capacidade igual que a sala em ' || x.local.predio || ' e ' || x.local.num_sala);
+    ELSE 
+         DBMS_OUTPUT.PUT_LINE('Sala em Predio D e numero de sala D010' || 
+                             ' tem capacidade menor que a sala em ' || x.local.predio || ' e ' || x.local.num_sala);
+    END IF;
+END;
+/
