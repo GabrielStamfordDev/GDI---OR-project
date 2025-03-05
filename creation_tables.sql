@@ -100,3 +100,9 @@ SELECT * FROM tb_sala;
 -- dividindo o objeto composto no print
 
 SELECT S.local.predio, S.local.num_sala, S.capacidade FROM tb_sala S;
+
+--Vou adicionar outra sala para poder testar o order function
+
+INSERT INTO tb_sala VALUES (sala_tp(local_Sala_tp('Predio D', 'D010'), 25));
+
+
