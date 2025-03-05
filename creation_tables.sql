@@ -134,3 +134,53 @@ BEGIN
     END IF;
 END;
 /
+
+-- Para criar objeto pessoa, preciso, antes, criar o objeto telefone e usar varray para representar o atributo multivalorado
+
+CREATE OR REPLACE TYPE telefone_pessoa_tp AS OBJECT(
+    telefone_pessoa VARCHAR(11)   
+);
+/
+
+CREATE OR REPLACE TYPE tp_telefone AS VARRAY(5) OF telefone_pessoa_tp; 
+/
+
+-- Criando objeto tipo pessoa
+
+CREATE OR REPLACE TYPE tp_pessoa AS OBJECT(
+    CPF CHAR(11),
+    rua VARCHAR2(50),
+    cidade VARCHAR2(20),
+    numero NUMBER,
+    CEP CHAR(8),
+    data_nascimento DATE,
+    email VARCHAR2(30),
+    nome VARCHAR2(50),
+    telefone tp_telefone
+)NOT FINAL NOT INSTANTIABLE;
+/
+-- Criando subtipo aluno de pessoa
+
+CREATE OR REPLACE TYPE tp_aluno UNDER tp_pessoa(
+    numero_matricula VARCHAR2(11),
+    status VARCHAR2(20),
+    data_matricula DATE,
+    curso REF Curso_t
+);
+/
+    
+CREATE TABLE Aluno OF tp_aluno(
+    CONSTRAINT pessoa_pk PRIMARY KEY(CPF),
+    curso SCOPE IS tb_curso
+);
+
+-- Inserindo aluno para testar
+
+INSERT INTO Aluno VALUES (tp_aluno('85619370518', 'Rua Conselheiro Portela', 'Recife', 139, '52020212', TO_DATE('01-01-1980', 'DD-MM-YYYY'), 'carlos.silva@gmail.com', 'Carlos Silva', tp_telefone(telefone_pessoa_tp('81982374309'), telefone_pessoa_tp('81981577399')),  '20250001', 'Ativo', TO_DATE('12-01-2022', 'DD-MM-YYYY'), (SELECT REF(C) FROM tb_curso C WHERE C.codigo_curso = 1)));
+
+-- Printando aluno inserido
+
+-- Esse select funcionava antes de adicionar ref para curso SELECT * FROM Aluno;
+
+-- Printando o atributo multivalorado telefone
+SELECT * FROM TABLE(SELECT A.telefone FROM Aluno A);
