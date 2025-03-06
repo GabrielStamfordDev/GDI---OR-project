@@ -184,3 +184,50 @@ INSERT INTO Aluno VALUES (tp_aluno('85619370518', 'Rua Conselheiro Portela', 'Re
 
 -- Printando o atributo multivalorado telefone
 SELECT * FROM TABLE(SELECT A.telefone FROM Aluno A);
+
+-- Para manter a ideia de transitividade de cargo e salário do professo, irei criar um tipo de objeto contendo ambos.
+
+CREATE OR REPLACE TYPE cargo_salario_professor AS OBJECT(
+    cargo VARCHAR(20),
+    salario NUMBER
+);
+/
+
+CREATE TABLE professor_cargo of cargo_salario_professor(
+    CONSTRAINT professor_cargo_pk PRIMARY KEY(cargo)
+);
+/
+
+-- Criando tipo professor
+
+CREATE OR REPLACE TYPE tp_professor UNDER tp_pessoa(
+    data_contratacao DATE,
+    CPF_supervisor REF tp_professor,
+    cargo REF cargo_salario_professor
+);
+/
+    
+CREATE TABLE Professor OF tp_professor(
+    CONSTRAINT professor_pk PRIMARY KEY(CPF),
+    CPF_supervisor SCOPE IS Professor,
+    cargo SCOPE IS professor_cargo
+);
+
+--Para checar se está tudo ok com professor, vou inserir um cargo e salario e um professor
+
+INSERT INTO professor_cargo VALUES (cargo_salario_professor('Coordenador', 8000));
+
+INSERT INTO Professor VALUES (tp_professor('32450176829', 'Rua Real da Torre', 'Recife', 705, '50610000', TO_DATE('15-06-1985','DD-MM-YYYY'), 'ana.souza@gmail.com', 'Ana Souza', tp_telefone(telefone_pessoa_tp('81982366399'), telefone_pessoa_tp('81922577399')), TO_DATE('03-05-2015', 'DD-MM-YYYY'), null, (SELECT REF(PC) FROM professor_cargo PC WHERE PC.cargo = 'Coordenador')));
+
+SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF FROM Professor P, TABLE(P.telefone) T;
+
+-- Agora que criei um professor e testei, vou criar um outro professor que será supervisionado pelo primeiro, para testar o auto-relacionamento
+--Vou antes, adicionar mais um cargo
+
+INSERT INTO professor_cargo VALUES (cargo_salario_professor('Professor', 5000));
+
+INSERT INTO Professor VALUES (tp_professor('48273956108', 'Avenida 17 de Agosto', 'Recife', 2413, '52061540', TO_DATE('10-12-2000','DD-MM-YYYY'), 'joao.santos@gmail.com', 'João Santos', tp_telefone(telefone_pessoa_tp('81982399389'), telefone_pessoa_tp('81881177399')), TO_DATE('23-09-2018', 'DD-MM-YYYY'), (SELECT REF(P) FROM Professor P WHERE P.CPF = '32450176829'), (SELECT REF(PC) FROM professor_cargo PC WHERE PC.cargo = 'Professor')));
+
+--Printando para testar
+
+SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF, P.CPF_supervisor.nome, P.CPF_supervisor.CPF  FROM Professor P, TABLE(P.telefone) T;
