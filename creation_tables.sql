@@ -248,3 +248,67 @@ END;
 --O select deu certo, pois printou primeiro ana, que é mais velha e depois joao
 
 SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF, P.CPF_supervisor.nome, P.CPF_supervisor.CPF  FROM Professor P, TABLE(P.telefone) T ORDER BY P.data_nasc();
+
+-- NÃO É POSSÍVEL APLICAR O CÓDIGO COMENTADO ABAIXO
+-- NO ORACLE SQL ÃO TEM COMO COLOCA RPARTE OU O REF COMO CHAVE PRIMÁRIA OU PARTE DELA
+-- DESSA MANEIRA, TEREI QUE USAR A RESTRIÇÃO DE FOREIGN KEY RELACIONAL MESMO
+
+--Antes de criar tipo turma, preciso criar o tipo data_aula do atributo multivalorado de turma
+
+/*CREATE OR REPLACE TYPE tp_data_aula_turma AS OBJECT(
+    horario DATE,
+    dia_semana VARCHAR(13)
+);
+/
+
+--Criando a nested table que vai conter esses atributos multivalorados
+
+CREATE TYPE nt_data_aula AS TABLE OF tp_data_aula_turma;
+/
+    
+--Criando tipo turma
+
+CREATE OR REPLACE TYPE tp_turma AS OBJECT(
+    codigo_turma VARCHAR2(10),
+    codigo_disciplina REF Disciplina_t,
+    lista_datas_aulas nt_data_aula
+);
+/
+
+CREATE TABLE Turma OF tp_turma (
+    disciplina WITH ROWID REFERENCES Disciplina,
+    CONSTRAINT turma_pk PRIMARY KEY (codigo_turma, disciplina)
+)NESTED TABLE lista_datas_aulas STORE AS tb_lista_datas_aulas;
+/
+*/
+
+CREATE OR REPLACE TYPE tp_data_aula_turma AS OBJECT(
+    horario DATE,
+    dia_semana VARCHAR(13)
+);
+/
+
+--Criando a nested table que vai conter esses atributos multivalorados
+
+CREATE TYPE nt_data_aula AS TABLE OF tp_data_aula_turma;
+/
+    
+--Criando tabela Turma
+
+CREATE TABLE Turma(
+    codigo_turma VARCHAR2(10),
+    codigo_disciplina INTEGER,
+    lista_datas nt_data_aula,
+    CONSTRAINT turma_pk PRIMARY KEY(codigo_turma,codigo_disciplina),
+    CONSTRAINT turma_codigo_disciplina_fk FOREIGN KEY(codigo_disciplina) REFERENCES Disciplina(codigo_disciplina)
+)NESTED TABLE lista_datas STORE AS tb_lista_datas_aulas;
+
+-- Criando uma turma
+
+INSERT INTO Turma VALUES('T01', 1, nt_data_aula(tp_data_aula_turma(TO_DATE('10:00:00', 'HH24:MI:SS'), 'SEGUNDA'), tp_data_aula_turma(TO_DATE('10:00:00', 'HH24:MI:SS'), 'QUARTA')));
+
+--Checando 
+
+SELECT T.codigo_turma, T.codigo_disciplina, TB.* FROM Turma T, TABLE(T.lista_datas) TB;
+
+--Se eu tentar inserir uma turma com codigo de disicplina que nao existe, da erro de integridade. eu testei e deu certo
