@@ -8,57 +8,6 @@ CREATE SEQUENCE codigo_curso
     INCREMENT BY 1 
     START WITH 1;
 
--- Criando o tipo de objeto curso
-CREATE OR REPLACE TYPE Curso_t AS OBJECT (
-    codigo_curso INTEGER,
-    nome_curso VARCHAR2(50),
-    carga_horaria NUMBER,
-    CPF_coordenador CHAR(11)
-);
-/
-
--- Criando a tabela de objeto do tipo curso
-CREATE TABLE tb_curso OF Curso_t (
-    carga_horaria NOT NULL,
-    CPF_coordenador NOT NULL,
-    CONSTRAINT curso_pk PRIMARY KEY (codigo_curso)
-);
-/
-
--- Criando o tipo de objeto disciplina, contendo REF por causa do relacionamento N:1
-CREATE OR REPLACE TYPE Disciplina_t AS OBJECT (
-    codigo_disciplina INTEGER,
-    nome_disciplina VARCHAR2(50),
-    carga_horaria NUMBER,
-    curso_ref REF Curso_t
-);
-/
-
--- Criando a tabela de objeto do tipo disciplina, com ROWID para garantir integridade referencial
-CREATE TABLE Disciplina OF Disciplina_t (
-    nome_disciplina NOT NULL,
-    carga_horaria NOT NULL,
-    curso_ref WITH ROWID REFERENCES tb_curso,
-    CONSTRAINT disciplina_pk PRIMARY KEY (codigo_disciplina)
-);
-/
-
--- Apesar de não ser população, a fim de testes, inserirei um curso e uma disiciplina, para checar se está tudo ok.
-INSERT INTO tb_curso VALUES (codigo_curso.NEXTVAL, 'Banco de Dados', 120, '12345678901');
-
--- Inserir uma disciplina referenciando um curso usando REF
--- Eu tentei inserir em disciplina antes de inserir o curso. Não deu um erro, como daria usando FOREIGN KEY, mas pelo menos ele não adicionou nada em disciplina
-INSERT INTO Disciplina
-SELECT codigo_disciplina.NEXTVAL, 'SQL Avançado', 60, REF(c)
-FROM tb_curso c
-WHERE c.nome_curso = 'Banco de Dados';
-/
--- printando o que adicionei em curso
-SELECT * FROM tb_curso;
--- printando o que adicionei em disicplina
-SELECT d.codigo_disciplina, d.nome_disciplina, d.carga_horaria, DEREF(d.curso_ref).nome_curso AS nome_curso
-FROM Disciplina d;
-
 -- Criando o tipo de objeto sala. Para isso, preciso antes, criar o tipo de objeto local, que é composto.
 CREATE OR REPLACE TYPE local_Sala_tp AS OBJECT(
     predio VARCHAR2(20),
@@ -159,31 +108,6 @@ CREATE OR REPLACE TYPE tp_pessoa AS OBJECT(
     telefone tp_telefone
 )NOT FINAL NOT INSTANTIABLE;
 /
--- Criando subtipo aluno de pessoa
-
-CREATE OR REPLACE TYPE tp_aluno UNDER tp_pessoa(
-    numero_matricula VARCHAR2(11),
-    status VARCHAR2(20),
-    data_matricula DATE,
-    curso REF Curso_t
-);
-/
-    
-CREATE TABLE Aluno OF tp_aluno(
-    CONSTRAINT pessoa_pk PRIMARY KEY(CPF),
-    curso SCOPE IS tb_curso
-);
-
--- Inserindo aluno para testar
-
-INSERT INTO Aluno VALUES (tp_aluno('85619370518', 'Rua Conselheiro Portela', 'Recife', 139, '52020212', TO_DATE('01-01-1980', 'DD-MM-YYYY'), 'carlos.silva@gmail.com', 'Carlos Silva', tp_telefone(telefone_pessoa_tp('81982374309'), telefone_pessoa_tp('81981577399')),  '20250001', 'Ativo', TO_DATE('12-01-2022', 'DD-MM-YYYY'), (SELECT REF(C) FROM tb_curso C WHERE C.codigo_curso = 1)));
-
--- Printando aluno inserido
-
--- Esse select funcionava antes de adicionar ref para curso SELECT * FROM Aluno;
-
--- Printando o atributo multivalorado telefone
-SELECT * FROM TABLE(SELECT A.telefone FROM Aluno A);
 
 -- Para manter a ideia de transitividade de cargo e salário do professo, irei criar um tipo de objeto contendo ambos.
 
@@ -197,6 +121,7 @@ CREATE TABLE professor_cargo of cargo_salario_professor(
     CONSTRAINT professor_cargo_pk PRIMARY KEY(cargo)
 );
 /
+
 
 -- Criando tipo professor
 
@@ -248,6 +173,85 @@ END;
 --O select deu certo, pois printou primeiro ana, que é mais velha e depois joao
 
 SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF, P.CPF_supervisor.nome, P.CPF_supervisor.CPF  FROM Professor P, TABLE(P.telefone) T ORDER BY P.data_nasc();
+
+-- Agora que criei professor, posso criar curso, já que ele referencia professor
+
+-- Criando o tipo de objeto curso
+CREATE OR REPLACE TYPE Curso_t AS OBJECT (
+    codigo_curso INTEGER,
+    nome_curso VARCHAR2(50),
+    carga_horaria NUMBER,
+    coordenador REF tp_professor
+);
+/
+
+-- Criando a tabela de objeto do tipo curso
+CREATE TABLE tb_curso OF Curso_t (
+    carga_horaria NOT NULL,
+    CONSTRAINT curso_pk PRIMARY KEY (codigo_curso),
+    coordenador WITH ROWID REFERENCES Professor
+);
+/
+
+-- Criando o tipo de objeto disciplina, contendo REF por causa do relacionamento N:1
+CREATE OR REPLACE TYPE Disciplina_t AS OBJECT (
+    codigo_disciplina INTEGER,
+    nome_disciplina VARCHAR2(50),
+    carga_horaria NUMBER,
+    curso_ref REF Curso_t
+);
+/
+
+-- Criando a tabela de objeto do tipo disciplina, com ROWID para garantir integridade referencial
+CREATE TABLE Disciplina OF Disciplina_t (
+    nome_disciplina NOT NULL,
+    carga_horaria NOT NULL,
+    curso_ref WITH ROWID REFERENCES tb_curso,
+    CONSTRAINT disciplina_pk PRIMARY KEY (codigo_disciplina)
+);
+/
+
+-- Apesar de não ser população, a fim de testes, inserirei um curso e uma disiciplina, para checar se está tudo ok.
+INSERT INTO tb_curso VALUES (codigo_curso.NEXTVAL, 'Banco de Dados', 120, (SELECT REF(P) FROM Professor P WHERE P.CPF = '32450176829'));
+
+-- Inserir uma disciplina referenciando um curso usando REF
+-- Eu tentei inserir em disciplina antes de inserir o curso. Não deu um erro, como daria usando FOREIGN KEY, mas pelo menos ele não adicionou nada em disciplina
+INSERT INTO Disciplina
+SELECT codigo_disciplina.NEXTVAL, 'SQL Avançado', 60, REF(c)
+FROM tb_curso c
+WHERE c.nome_curso = 'Banco de Dados';
+/
+-- printando o que adicionei em curso
+SELECT  C.codigo_curso, C.carga_horaria, C.coordenador.CPF, C.coordenador.nome FROM tb_curso C;
+-- printando o que adicionei em disicplina
+SELECT d.codigo_disciplina, d.nome_disciplina, d.carga_horaria, DEREF(d.curso_ref).nome_curso AS nome_curso
+FROM Disciplina d;
+
+-- Criando subtipo aluno de pessoa
+
+CREATE OR REPLACE TYPE tp_aluno UNDER tp_pessoa(
+    numero_matricula VARCHAR2(11),
+    status VARCHAR2(20),
+    data_matricula DATE,
+    curso REF Curso_t
+);
+/
+    
+CREATE TABLE Aluno OF tp_aluno(
+    CONSTRAINT pessoa_pk PRIMARY KEY(CPF),
+    curso SCOPE IS tb_curso
+);
+
+-- Inserindo aluno para testar
+
+INSERT INTO Aluno VALUES (tp_aluno('85619370518', 'Rua Conselheiro Portela', 'Recife', 139, '52020212', TO_DATE('01-01-1980', 'DD-MM-YYYY'), 'carlos.silva@gmail.com', 'Carlos Silva', tp_telefone(telefone_pessoa_tp('81982374309'), telefone_pessoa_tp('81981577399')),  '20250001', 'Ativo', TO_DATE('12-01-2022', 'DD-MM-YYYY'), (SELECT REF(C) FROM tb_curso C WHERE C.codigo_curso = 1)));
+
+-- Printando aluno inserido
+
+-- Esse select funcionava antes de adicionar ref para curso SELECT * FROM Aluno;
+
+-- Printando o atributo multivalorado telefone
+SELECT * FROM TABLE(SELECT A.telefone FROM Aluno A);
 
 -- NÃO É POSSÍVEL APLICAR O CÓDIGO COMENTADO ABAIXO
 -- NO ORACLE SQL ÃO TEM COMO COLOCA RPARTE OU O REF COMO CHAVE PRIMÁRIA OU PARTE DELA
