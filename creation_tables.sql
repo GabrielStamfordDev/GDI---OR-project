@@ -343,3 +343,51 @@ INSERT INTO Ensina VALUES (tp_ensina((SELECT REF(P) FROM Professor P WHERE P.CPF
 --Checando
 
 SELECT E.professor.CPF, E.sala.capacidade, E.turma.codigo_turma FROM Ensina E;
+
+--Criando o tipo Matrícula
+
+CREATE SEQUENCE codigo_matricula
+    INCREMENT BY 1 
+    START WITH 1;
+
+CREATE OR REPLACE TYPE tp_matricula AS OBJECT(
+    codigo_matricula INTEGER,
+    turma REF tp_turma,
+    aluno REF tp_aluno
+);
+/
+
+CREATE TABLE Matricula OF tp_matricula(
+    turma WITH ROWID REFERENCES Turma,
+    aluno WITH ROWID REFERENCES Aluno,
+    CONSTRAINT matricula_pk PRIMARY KEY(codigo_matricula)
+);
+/
+
+--Inserindo Matricula para testar e depois consultando
+
+INSERT INTO Matricula VALUES (tp_matricula(codigo_matricula.NEXTVAL, (SELECT REF(T) FROM Turma T WHERE T.codigo_turma = 'T01' AND T.codigo_disciplina = 1), (SELECT REF(A) FROM Aluno A WHERE A.CPF = '85619370518')));
+
+SELECT M.codigo_matricula, M.turma.codigo_turma, M.aluno.CPF FROM Matricula M;
+
+--Criando o tipo Prova
+
+CREATE OR REPLACE TYPE tp_prova AS OBJECT(
+    codigo_prova INTEGER,
+    descricao VARCHAR(100),
+    pontuacao NUMBER(4,2),
+    matricula REF tp_matricula
+);
+/
+
+CREATE TABLE Prova OF tp_prova(
+    CONSTRAINT prova_pk PRIMARY KEY(codigo_prova),
+    matricula WITH ROWID REFERENCES Matricula
+);
+/
+
+--Inserindo prova e consultando
+
+INSERT INTO Prova VALUES (tp_prova(86869, 'Prova 1 de Introdução à Programaçaõ',8.5, (SELECT REF(M) FROM Matricula M WHERE M.codigo_matricula = 1)));
+
+SELECT P.codigo_prova, P.matricula.aluno.CPF FROM Prova P;
