@@ -292,23 +292,54 @@ CREATE OR REPLACE TYPE tp_data_aula_turma AS OBJECT(
 
 CREATE TYPE nt_data_aula AS TABLE OF tp_data_aula_turma;
 /
+
+--Criando tipo turma
+
+CREATE OR REPLACE TYPE tp_turma AS OBJECT(
+    codigo_turma VARCHAR2(10),
+    codigo_disciplina INTEGER,
+    lista_datas nt_data_aula
+);
+/
     
 --Criando tabela Turma
 
-CREATE TABLE Turma(
-    codigo_turma VARCHAR2(10),
-    codigo_disciplina INTEGER,
-    lista_datas nt_data_aula,
+CREATE TABLE Turma OF tp_turma(
     CONSTRAINT turma_pk PRIMARY KEY(codigo_turma,codigo_disciplina),
     CONSTRAINT turma_codigo_disciplina_fk FOREIGN KEY(codigo_disciplina) REFERENCES Disciplina(codigo_disciplina)
 )NESTED TABLE lista_datas STORE AS tb_lista_datas_aulas;
+/
 
 -- Criando uma turma
 
-INSERT INTO Turma VALUES('T01', 1, nt_data_aula(tp_data_aula_turma(TO_DATE('10:00:00', 'HH24:MI:SS'), 'SEGUNDA'), tp_data_aula_turma(TO_DATE('10:00:00', 'HH24:MI:SS'), 'QUARTA')));
+INSERT INTO Turma VALUES(tp_turma('T01', 1, nt_data_aula(tp_data_aula_turma(TO_DATE('10:00:00', 'HH24:MI:SS'), 'SEGUNDA'), tp_data_aula_turma(TO_DATE('10:00:00', 'HH24:MI:SS'), 'QUARTA'))));
 
 --Checando 
 
 SELECT T.codigo_turma, T.codigo_disciplina, TB.* FROM Turma T, TABLE(T.lista_datas) TB;
 
 --Se eu tentar inserir uma turma com codigo de disicplina que nao existe, da erro de integridade. eu testei e deu certo
+
+--Para criar o relacionamento ensina, basta criar o tipo e a tabela do tipo ensina, contendo as REF para as entidades que participam do relacionamento
+
+CREATE OR REPLACE TYPE tp_ensina AS OBJECT(
+    professor REF tp_professor,
+    sala REF sala_tp,
+    turma REF tp_turma
+);
+/
+
+CREATE TABLE Ensina OF tp_ensina(
+    professor WITH ROWID REFERENCES Professor,
+    sala WITH ROWID REFERENCES tb_sala,
+    turma WITH ROWID REFERENCES Turma
+);
+/
+
+--Vamos adicionar referente às linhas já adiconadas das entidades em questão
+
+INSERT INTO Ensina VALUES (tp_ensina((SELECT REF(P) FROM Professor P WHERE P.CPF = '32450176829'), (SELECT REF(S) FROM tb_sala S WHERE S.local.predio = 'Predio E' AND S.local.num_sala = 'D009'), (SELECT REF(T) FROM Turma T WHERE T.codigo_turma = 'T01' AND T.codigo_disciplina = 1)));
+
+--Checando
+
+SELECT E.professor.CPF, E.sala.capacidade, E.turma.codigo_turma FROM Ensina E;
