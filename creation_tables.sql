@@ -231,3 +231,20 @@ INSERT INTO Professor VALUES (tp_professor('48273956108', 'Avenida 17 de Agosto'
 --Printando para testar
 
 SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF, P.CPF_supervisor.nome, P.CPF_supervisor.CPF  FROM Professor P, TABLE(P.telefone) T;
+
+-- Vou criar um map em pesssoa para ordenar pela data de nascimento. Não quero que nenhum subtipo possa mudar esse map
+ALTER TYPE tp_pessoa ADD FINAL MAP MEMBER FUNCTION data_nasc RETURN DATE CASCADE;
+/
+
+CREATE OR REPLACE TYPE BODY tp_pessoa AS
+FINAL MAP MEMBER FUNCTION data_nasc RETURN DATE IS
+BEGIN
+RETURN data_nascimento;
+END data_nasc;
+END;
+/
+
+--Testando o MAP com os 2 professores inseridos
+--O select deu certo, pois printou primeiro ana, que é mais velha e depois joao
+
+SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF, P.CPF_supervisor.nome, P.CPF_supervisor.CPF  FROM Professor P, TABLE(P.telefone) T ORDER BY P.data_nasc();
