@@ -105,9 +105,23 @@ CREATE OR REPLACE TYPE tp_pessoa AS OBJECT(
     data_nascimento DATE,
     email VARCHAR2(30),
     nome VARCHAR2(50),
-    telefone tp_telefone
+    telefone tp_telefone,
+    MEMBER PROCEDURE dizer_idade (SELF tp_pessoa)
 )NOT FINAL NOT INSTANTIABLE;
 /
+
+CREATE OR REPLACE TYPE BODY tp_pessoa AS
+
+MEMBER PROCEDURE dizer_idade (SELF tp_pessoa) IS
+    idade INTEGER;
+    BEGIN
+        idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
+        DBMS_OUTPUT.PUT_LINE('A pessoa de CPF: ' || CPF || ' tem ' || idade || ' anos');
+    END;
+END;
+/
+
+--VOU TESTAR O PROCEDURE LÁ EMBAIXO COM ALUNO
 
 -- Para manter a ideia de transitividade de cargo e salário do professo, irei criar um tipo de objeto contendo ambos.
 
@@ -162,6 +176,14 @@ ALTER TYPE tp_pessoa ADD FINAL MAP MEMBER FUNCTION data_nasc RETURN DATE CASCADE
 /
 
 CREATE OR REPLACE TYPE BODY tp_pessoa AS
+
+MEMBER PROCEDURE dizer_idade (SELF tp_pessoa) IS
+    idade INTEGER;
+    BEGIN
+        idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
+        DBMS_OUTPUT.PUT_LINE('A pessoa de CPF: ' || CPF || ' tem ' || idade || ' anos');
+    END;  
+
 FINAL MAP MEMBER FUNCTION data_nasc RETURN DATE IS
 BEGIN
 RETURN data_nascimento;
@@ -244,7 +266,7 @@ CREATE TABLE Aluno OF tp_aluno(
 
 -- Inserindo aluno para testar
 
-INSERT INTO Aluno VALUES (tp_aluno('85619370518', 'Rua Conselheiro Portela', 'Recife', 139, '52020212', TO_DATE('01-01-1980', 'DD-MM-YYYY'), 'carlos.silva@gmail.com', 'Carlos Silva', tp_telefone(telefone_pessoa_tp('81982374309'), telefone_pessoa_tp('81981577399')),  '20250001', 'Ativo', TO_DATE('12-01-2022', 'DD-MM-YYYY'), (SELECT REF(C) FROM tb_curso C WHERE C.codigo_curso = 1)));
+INSERT INTO Aluno VALUES (tp_aluno('85619370518', 'Rua Conselheiro Portela', 'Recife', 139, '52020212', TO_DATE('01-01-2000', 'DD-MM-YYYY'), 'carlos.silva@gmail.com', 'Carlos Silva', tp_telefone(telefone_pessoa_tp('81982374309'), telefone_pessoa_tp('81981577399')),  '20250001', 'Ativo', TO_DATE('12-01-2022', 'DD-MM-YYYY'), (SELECT REF(C) FROM tb_curso C WHERE C.codigo_curso = 1)));
 
 -- Printando aluno inserido
 
@@ -252,6 +274,19 @@ INSERT INTO Aluno VALUES (tp_aluno('85619370518', 'Rua Conselheiro Portela', 'Re
 
 -- Printando o atributo multivalorado telefone
 SELECT * FROM TABLE(SELECT A.telefone FROM Aluno A);
+
+-- Testando o PROCEDURE dizer_idade de pessoa com aluno
+
+DECLARE
+    a tp_aluno;
+BEGIN
+    SELECT VALUE(A) INTO a 
+    FROM Aluno A
+    WHERE CPF = '85619370518';
+
+    a.dizer_idade();
+END;
+/
 
 -- NÃO É POSSÍVEL APLICAR O CÓDIGO COMENTADO ABAIXO
 -- NO ORACLE SQL ÃO TEM COMO COLOCA RPARTE OU O REF COMO CHAVE PRIMÁRIA OU PARTE DELA
