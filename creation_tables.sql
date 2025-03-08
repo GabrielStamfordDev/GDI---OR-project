@@ -19,15 +19,23 @@ CREATE OR REPLACE TYPE local_Sala_tp AS OBJECT(
 CREATE OR REPLACE TYPE sala_tp AS OBJECT(
     local local_Sala_tp,
     capacidade NUMBER,
-    ORDER MEMBER FUNCTION comparaCapacidade(S sala_tp) RETURN INTEGER
+    ORDER MEMBER FUNCTION comparaCapacidade(S sala_tp) RETURN INTEGER,
+    CONSTRUCTOR FUNCTION sala_tp (l local_Sala_tp) RETURN SELF AS RESULT
 );
 /
 
---Criando corpo de sala pro order
+--Criando corpo de sala pro order e pro constructor, que a iseia é dar caapcidade 50 como default
 
-CREATE OR REPLACE TYPE BODY sala_tp AS ORDER MEMBER FUNCTION comparaCapacidade(S sala_tp) RETURN INTEGER IS
+CREATE OR REPLACE TYPE BODY sala_tp AS 
+ORDER MEMBER FUNCTION comparaCapacidade(S sala_tp) RETURN INTEGER IS
 BEGIN 
 RETURN SELF.capacidade - S.capacidade;
+END;
+CONSTRUCTOR FUNCTION sala_tp (l local_Sala_tp) RETURN SELF AS RESULT IS
+BEGIN
+    SELF.local := l;
+    SELF.capacidade := 50;
+RETURN;
 END;
 END;
 /
@@ -47,6 +55,14 @@ INSERT INTO tb_sala VALUES (sala_tp(local_Sala_tp('Predio E', 'D009'), 50));
 SELECT * FROM tb_sala;
 
 -- dividindo o objeto composto no print
+
+SELECT S.local.predio, S.local.num_sala, S.capacidade FROM tb_sala S;
+
+--Vou adicionar outra sala para testar o constructor
+
+INSERT INTO tb_sala VALUES (sala_tp(local_Sala_tp('Predio F', 'D011')));
+
+--Printando
 
 SELECT S.local.predio, S.local.num_sala, S.capacidade FROM tb_sala S;
 
