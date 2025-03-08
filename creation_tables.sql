@@ -106,13 +106,13 @@ CREATE OR REPLACE TYPE tp_pessoa AS OBJECT(
     email VARCHAR2(30),
     nome VARCHAR2(50),
     telefone tp_telefone,
-    MEMBER PROCEDURE dizer_idade (SELF tp_pessoa)
+    MEMBER PROCEDURE dizer_idade
 )NOT FINAL NOT INSTANTIABLE;
 /
 
 CREATE OR REPLACE TYPE BODY tp_pessoa AS
 
-MEMBER PROCEDURE dizer_idade (SELF tp_pessoa) IS
+MEMBER PROCEDURE dizer_idade IS
     idade INTEGER;
     BEGIN
         idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
@@ -177,7 +177,7 @@ ALTER TYPE tp_pessoa ADD FINAL MAP MEMBER FUNCTION data_nasc RETURN DATE CASCADE
 
 CREATE OR REPLACE TYPE BODY tp_pessoa AS
 
-MEMBER PROCEDURE dizer_idade (SELF tp_pessoa) IS
+MEMBER PROCEDURE dizer_idade IS
     idade INTEGER;
     BEGIN
         idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
@@ -191,6 +191,35 @@ END data_nasc;
 END;
 /
 
+/*
+--reescrevendo dizer idade de pessoa
+
+CREATE OR REPLACE TYPE BODY tp_professor AS
+    
+OVERRIDING MEMBER PROCEDURE dizer_idade IS
+    idade INTEGER;
+    anos_servico INTEGER;
+    BEGIN
+        idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
+        anos_servico:= TRUNC(MONTHS_BETWEEN(SYSDATE, data_contratacao) / 12);
+        DBMS_OUTPUT.PUT_LINE('A pessoa de CPF: ' || CPF || ' tem ' || idade || ' anos e tem ' || anos_servico || ' de tempo como professor ');
+    END;  
+END;
+/
+--Testando
+
+DECLARE
+    p tp_professor;
+BEGIN
+    SELECT VALUE(P) INTO p 
+    FROM Professor P
+    WHERE CPF = '48273956108';
+
+    p.dizer_idade();
+END;
+/
+
+*/
 --Testando o MAP com os 2 professores inseridos
 --O select deu certo, pois printou primeiro ana, que é mais velha e depois joao
 
