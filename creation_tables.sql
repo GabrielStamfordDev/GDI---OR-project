@@ -111,7 +111,7 @@ CREATE OR REPLACE TYPE tp_telefone AS VARRAY(5) OF telefone_pessoa_tp;
 /
 
 -- Criando objeto tipo pessoa
-
+    
 CREATE OR REPLACE TYPE tp_pessoa AS OBJECT(
     CPF CHAR(11),
     rua VARCHAR2(50),
@@ -158,9 +158,26 @@ CREATE TABLE professor_cargo of cargo_salario_professor(
 CREATE OR REPLACE TYPE tp_professor UNDER tp_pessoa(
     data_contratacao DATE,
     CPF_supervisor REF tp_professor,
-    cargo REF cargo_salario_professor
+    cargo REF cargo_salario_professor,
+    OVERRIDING MEMBER PROCEDURE dizer_idade
 );
 /
+
+--reescrevendo dizer idade de professor
+
+CREATE OR REPLACE TYPE BODY tp_professor AS
+    
+OVERRIDING MEMBER PROCEDURE dizer_idade IS
+    idade INTEGER;
+    anos_servico INTEGER;
+    BEGIN
+        idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
+        anos_servico:= TRUNC(MONTHS_BETWEEN(SYSDATE, data_contratacao) / 12);
+        DBMS_OUTPUT.PUT_LINE('A pessoa de CPF: ' || CPF || ' tem ' || idade || ' anos e tem ' || anos_servico || ' anos de tempo como professor ');
+    END;  
+END;
+/
+
     
 CREATE TABLE Professor OF tp_professor(
     CONSTRAINT professor_pk PRIMARY KEY(CPF),
@@ -187,6 +204,19 @@ INSERT INTO Professor VALUES (tp_professor('48273956108', 'Avenida 17 de Agosto'
 
 SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF, P.CPF_supervisor.nome, P.CPF_supervisor.CPF  FROM Professor P, TABLE(P.telefone) T;
 
+--Testando dizer idade de professor
+
+DECLARE
+    p tp_professor;
+BEGIN
+    SELECT VALUE(P) INTO p 
+    FROM Professor P
+    WHERE CPF = '48273956108';
+
+    p.dizer_idade();
+END;
+/
+
 -- Vou criar um map em pesssoa para ordenar pela data de nascimento. Não quero que nenhum subtipo possa mudar esse map
 ALTER TYPE tp_pessoa ADD FINAL MAP MEMBER FUNCTION data_nasc RETURN DATE CASCADE;
 /
@@ -208,7 +238,7 @@ END;
 /
 
 /*
---reescrevendo dizer idade de pessoa
+--reescrevendo dizer idade de professor
 
 CREATE OR REPLACE TYPE BODY tp_professor AS
     
@@ -433,6 +463,9 @@ SELECT E.professor.CPF, E.sala.capacidade, E.turma.codigo_turma FROM Ensina E;
 CREATE SEQUENCE codigo_matricula
     INCREMENT BY 1 
     START WITH 1;
+
+-- Observe que eu tentei colocar como parte da chave primária, o ref de aluno e turma. tentie usar deref, dot notation,
+-- nada funcionou. falei com monitores, ninguém conseguiu me ajudar. Por fim, decidi adicionar o atributo codigo da matrícula para ser a chave primária
 
 CREATE OR REPLACE TYPE tp_matricula AS OBJECT(
     codigo_matricula INTEGER,
