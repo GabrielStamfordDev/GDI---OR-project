@@ -152,7 +152,6 @@ CREATE TABLE professor_cargo of cargo_salario_professor(
 );
 /
 
-
 -- Criando tipo professor
 
 CREATE OR REPLACE TYPE tp_professor UNDER tp_pessoa(
@@ -167,14 +166,14 @@ CREATE OR REPLACE TYPE tp_professor UNDER tp_pessoa(
 
 CREATE OR REPLACE TYPE BODY tp_professor AS
     
-OVERRIDING MEMBER PROCEDURE dizer_idade IS
-    idade INTEGER;
-    anos_servico INTEGER;
-    BEGIN
-        idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
-        anos_servico:= TRUNC(MONTHS_BETWEEN(SYSDATE, data_contratacao) / 12);
-        DBMS_OUTPUT.PUT_LINE('A pessoa de CPF: ' || CPF || ' tem ' || idade || ' anos e tem ' || anos_servico || ' anos de tempo como professor ');
-    END;  
+    OVERRIDING MEMBER PROCEDURE dizer_idade IS
+        idade INTEGER;
+        anos_servico INTEGER;
+        BEGIN
+            idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
+            anos_servico:= TRUNC(MONTHS_BETWEEN(SYSDATE, data_contratacao) / 12);
+            DBMS_OUTPUT.PUT_LINE('O Professor de CPF: ' || CPF || ' tem ' || idade || ' anos e tem ' || anos_servico || ' anos de tempo como professor ');
+        END dizer_idade;
 END;
 /
 
@@ -204,7 +203,7 @@ INSERT INTO Professor VALUES (tp_professor('48273956108', 'Avenida 17 de Agosto'
 
 SELECT T.*, P.cargo.cargo, P.cargo.salario, P.CPF, P.CPF_supervisor.nome, P.CPF_supervisor.CPF  FROM Professor P, TABLE(P.telefone) T;
 
---Testando dizer idade de professor
+--Testando dizer_idade de professor
 
 DECLARE
     p tp_professor;
@@ -237,35 +236,6 @@ END data_nasc;
 END;
 /
 
-/*
---reescrevendo dizer idade de professor
-
-CREATE OR REPLACE TYPE BODY tp_professor AS
-    
-OVERRIDING MEMBER PROCEDURE dizer_idade IS
-    idade INTEGER;
-    anos_servico INTEGER;
-    BEGIN
-        idade := TRUNC(MONTHS_BETWEEN(SYSDATE, data_nascimento) / 12);
-        anos_servico:= TRUNC(MONTHS_BETWEEN(SYSDATE, data_contratacao) / 12);
-        DBMS_OUTPUT.PUT_LINE('A pessoa de CPF: ' || CPF || ' tem ' || idade || ' anos e tem ' || anos_servico || ' de tempo como professor ');
-    END;  
-END;
-/
---Testando
-
-DECLARE
-    p tp_professor;
-BEGIN
-    SELECT VALUE(P) INTO p 
-    FROM Professor P
-    WHERE CPF = '48273956108';
-
-    p.dizer_idade();
-END;
-/
-
-*/
 --Testando o MAP com os 2 professores inseridos
 --O select deu certo, pois printou primeiro ana, que é mais velha e depois joao
 
@@ -330,9 +300,25 @@ CREATE OR REPLACE TYPE tp_aluno UNDER tp_pessoa(
     numero_matricula VARCHAR2(11),
     status VARCHAR2(20),
     data_matricula DATE,
-    curso REF Curso_t
+    curso REF Curso_t,
+    MEMBER FUNCTION dizer_tempo_estuda RETURN INTEGER
 );
 /
+
+--Descrevendo a função dizer_tempo_estuda de aluno
+    
+CREATE OR REPLACE TYPE BODY tp_aluno AS
+    
+     MEMBER FUNCTION dizer_tempo_estuda RETURN INTEGER IS
+        anos_estudo INTEGER;
+        BEGIN
+            anos_estudo:= TRUNC(MONTHS_BETWEEN(SYSDATE, data_matricula) / 12);
+            RETURN anos_estudo;
+        END dizer_tempo_estuda;
+
+END;
+/
+
     
 CREATE TABLE Aluno OF tp_aluno(
     CONSTRAINT pessoa_pk PRIMARY KEY(CPF),
@@ -362,6 +348,10 @@ BEGIN
     a.dizer_idade();
 END;
 /
+
+-- Testando a função dizer_tempo_estuda de aluno
+
+SELECT A.dizer_tempo_estuda(), A.nome, A.CPF FROM Aluno A;
 
 -- NÃO É POSSÍVEL APLICAR O CÓDIGO COMENTADO ABAIXO
 -- NO ORACLE SQL ÃO TEM COMO COLOCA RPARTE OU O REF COMO CHAVE PRIMÁRIA OU PARTE DELA
