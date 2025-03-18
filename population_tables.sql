@@ -1,3 +1,5 @@
+--Como na criação inserimos algumas tuplas para realziar testes, vamos, antes de começar a população, limpar as tabelas
+
 TRUNCATE TABLE Prova;
 TRUNCATE TABLE Matricula;
 TRUNCATE TABLE Ensina;
