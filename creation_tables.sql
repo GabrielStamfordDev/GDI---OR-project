@@ -1,4 +1,8 @@
 -- Criando sequência para código da disciplina
+
+--OBSERVAÇÃO: essas sequência somente serão utilizadas na população das tabelas. Neste arquivo, de criação, serão inseridas algumas tuplas para realziar testes,
+-- Entretanto, ao invés de usar a sequência, foi colocado os códigos "na mão", para não afetar a sequência na hora da população
+
 CREATE SEQUENCE codigo_disciplina 
     INCREMENT BY 1 
     START WITH 1;
@@ -279,15 +283,25 @@ CREATE TABLE Disciplina OF Disciplina_t (
 /
 
 -- Apesar de não ser população, a fim de testes, inserirei um curso e uma disiciplina, para checar se está tudo ok.
-INSERT INTO tb_curso VALUES (codigo_curso.NEXTVAL, 'Banco de Dados', 120, (SELECT REF(P) FROM Professor P WHERE P.CPF = '32450176829'));
+--INSERT INTO tb_curso VALUES (codigo_curso.NEXTVAL, 'Banco de Dados', 120, (SELECT REF(P) FROM Professor P WHERE P.CPF = '32450176829'));
+iNSERT INTO tb_curso VALUES (1, 'Banco de Dados', 120, (SELECT REF(P) FROM Professor P WHERE P.CPF = '32450176829'));
 
 -- Inserir uma disciplina referenciando um curso usando REF
 -- Eu tentei inserir em disciplina antes de inserir o curso. Não deu um erro, como daria usando FOREIGN KEY, mas pelo menos ele não adicionou nada em disciplina
-INSERT INTO Disciplina
+/*INSERT INTO Disciplina
 SELECT codigo_disciplina.NEXTVAL, 'SQL Avançado', 60, REF(c)
 FROM tb_curso c
 WHERE c.nome_curso = 'Banco de Dados';
 /
+*/
+
+INSERT INTO Disciplina
+SELECT 1, 'SQL Avançado', 60, REF(c)
+FROM tb_curso c
+WHERE c.nome_curso = 'Banco de Dados';
+/
+
+
 -- printando o que adicionei em curso
 SELECT  C.codigo_curso, C.carga_horaria, C.coordenador.CPF, C.coordenador.nome FROM tb_curso C;
 -- printando o que adicionei em disicplina
@@ -473,8 +487,10 @@ CREATE TABLE Matricula OF tp_matricula(
 
 --Inserindo Matricula para testar e depois consultando
 
-INSERT INTO Matricula VALUES (tp_matricula(codigo_matricula.NEXTVAL, (SELECT REF(T) FROM Turma T WHERE T.codigo_turma = 'T01' AND T.codigo_disciplina = 1), (SELECT REF(A) FROM Aluno A WHERE A.CPF = '85619370518')));
+--INSERT INTO Matricula VALUES (tp_matricula(codigo_matricula.NEXTVAL, (SELECT REF(T) FROM Turma T WHERE T.codigo_turma = 'T01' AND T.codigo_disciplina = 1), (SELECT REF(A) FROM Aluno A WHERE A.CPF = '85619370518')));
 
+INSERT INTO Matricula VALUES (tp_matricula(1, (SELECT REF(T) FROM Turma T WHERE T.codigo_turma = 'T01' AND T.codigo_disciplina = 1), (SELECT REF(A) FROM Aluno A WHERE A.CPF = '85619370518')));
+    
 SELECT M.codigo_matricula, M.turma.codigo_turma, M.aluno.CPF FROM Matricula M;
 
 --Criando o tipo Prova
