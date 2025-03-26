@@ -108,10 +108,41 @@ SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS
 
 SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB WHERE (T.codigo_turma, T.codigo_disciplina) IN
 (SELECT T.codigo_turma, T.codigo_disciplina FROM Turma T, TABLE(T.lista_datas) TB
-GROUP BY T.codigo_turma, T.codigo_disciplina HAVING COUNT(*) > 2);
+GROUP BY T.codigo_turma, T.codigo_disciplina HAVING COUNT(*) > 2) ORDER BY T.codigo_turma, T.codigo_disciplina, TB.horario, TB.dia_semana;
 
 /*SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB WHERE T.codigo_turma IN
 (SELECT T.codigo_turma FROM Turma T, TABLE(T.lista_datas) TB
 GROUP BY T.codigo_turma HAVING COUNT(*) > 2);*/
 
+/*
+  CONSULTA 8: Comparando a capacidade de duas salas
+*/
 
+
+DECLARE
+    x sala_tp;
+    n INTEGER;
+BEGIN
+    -- Pegando a sala com maior capacidade
+    SELECT VALUE(S) INTO x 
+    FROM tb_sala S 
+    WHERE S.local.predio = 'Predio E' AND S.local.num_sala = 'D009';
+
+    -- Comparando com outra sala
+    SELECT S.comparaCapacidade(x) INTO n 
+    FROM tb_sala S 
+    WHERE S.local.predio = 'Predio D' AND S.local.num_sala = 'D010';
+
+    -- Verificando a comparação
+    IF n > 0 THEN 
+        DBMS_OUTPUT.PUT_LINE('Sala em Predio D e numero de sala D010' || 
+                             ' tem capacidade maior que a sala em ' || x.local.predio || ' e ' || x.local.num_sala);
+    ELSIF n = 0 THEN 
+         DBMS_OUTPUT.PUT_LINE('Sala em Predio D e numero de sala D010' || 
+                             ' tem capacidade igual que a sala em ' || x.local.predio || ' e ' || x.local.num_sala);
+    ELSE 
+         DBMS_OUTPUT.PUT_LINE('Sala em Predio D e numero de sala D010' || 
+                             ' tem capacidade menor que a sala em ' || x.local.predio || ' e ' || x.local.num_sala);
+    END IF;
+END;
+/
