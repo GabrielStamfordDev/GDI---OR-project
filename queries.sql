@@ -27,18 +27,37 @@ SELECT s.CPF AS supervisor_cpf, s.nome AS supervisor_nome, COUNT(p.CPF) AS num_s
 
 /*
 CONSULTA A UM VARRAU
-CONSULTA 5: Consultar quantos telefones um aluno possui
+CONSULTA 5: Consultar quantos telefones uma pessoa possui. Vou fazer uma consulta para um aluno e outra para um professor.
 */
 
+-- Para aluno de CPF '12345678911'
+
 DECLARE
-  telefones_aluno Aluno.tp_telefone%TYPE;
+  telefones_aluno Aluno.telefone%TYPE;
+  nome Aluno.nome%TYPE;
 BEGIN
-  SELECT A.tp_telefone INTO telefones_aluno FROM Aluno A WHERE A.CPF = '12345678911';
+  SELECT A.telefone, A.nome INTO telefones_aluno, nome FROM Aluno A WHERE A.CPF = '12345678911';
 
   IF telefones_aluno.count > 1 THEN
-      DBMS_OUTPUT.PUT_LINE('Primeiro telefone do aluno ' || A.nome || ' = ' || telefones_aluno(1).telefone_pessoa_tp || '. Mas ele possui ' || telefones_aluno.count || ' telefones.');
-  ELSIF telefones_aluno.count = 1 THEN
-      DBMS_OUTPUT.PUT_LINE('O aluno ' || A.nome || ' só tem um telefone = ' || telefones_aluno(1).telefone_pessoa_tp);
+      DBMS_OUTPUT.PUT_LINE('Primeiro telefone do aluno ' || nome || ' = ' || telefones_aluno(1).telefone_pessoa || '. Mas ele possui ' || telefones_aluno.count || ' telefones.');
+  ELSIF telefones_aluno.count <= 1 THEN
+      DBMS_OUTPUT.PUT_LINE('O aluno ' || nome || ' só tem um telefone = ' || telefones_aluno(1).telefone_pessoa);
+  END IF;
+END;
+/
+
+-- Para professor de CPF '85619370518'
+
+DECLARE
+  telefones_professor Professor.telefone%TYPE;
+  nome Professor.nome%TYPE;
+BEGIN
+  SELECT P.telefone, P.nome INTO telefones_aluno, nome FROM Professor P WHERE P.CPF = '85619370518';
+
+  IF telefones_professor.count > 1 THEN
+      DBMS_OUTPUT.PUT_LINE('Primeiro telefone do professor ' || nome || ' = ' || telefones_professor(1).telefone_pessoa || '. Mas ele possui ' || telefones_professor.count || ' telefones.');
+  ELSIF telefones_professor.count <= 1 THEN
+      DBMS_OUTPUT.PUT_LINE('O professor ' || nome || ' só tem um telefone = ' || telefones_professor(1).telefone_pessoa);
   END IF;
 END;
 /
