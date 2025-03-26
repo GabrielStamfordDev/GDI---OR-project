@@ -24,3 +24,21 @@ CONSULTA 4: Consultar quantos professores supervisionados cada professor supervi
 */
 
 SELECT s.CPF AS supervisor_cpf, s.nome AS supervisor_nome, COUNT(p.CPF) AS num_supervisadosFROM Professor p JOIN Professor s ON p.CPF_supervisor = REF(s) GROUP BY s.CPF, s.nome;
+
+/*
+CONSULTA A UM VARRAU
+CONSULTA 5: Consultar quantos telefones um aluno possui
+*/
+
+DECLARE
+  telefones_aluno Aluno.tp_telefone%TYPE;
+BEGIN
+  SELECT A.tp_telefone INTO telefones_aluno FROM Aluno A WHERE A.CPF = '12345678911';
+
+  IF telefones_aluno.count > 1 THEN
+      DBMS_OUTPUT.PUT_LINE('Primeiro telefone do aluno ' || A.nome || ' = ' || telefones_aluno(1).telefone_pessoa_tp || '. Mas ele possui ' || telefones_aluno.count || ' telefones.');
+  ELSIF telefones_aluno.count = 1 THEN
+      DBMS_OUTPUT.PUT_LINE('O aluno ' || A.nome || ' só tem um telefone = ' || telefones_aluno(1).telefone_pessoa_tp);
+  END IF;
+END;
+/
