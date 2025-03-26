@@ -52,7 +52,7 @@ DECLARE
   telefones_professor Professor.telefone%TYPE;
   nome Professor.nome%TYPE;
 BEGIN
-  SELECT P.telefone, P.nome INTO telefones_aluno, nome FROM Professor P WHERE P.CPF = '85619370518';
+  SELECT P.telefone, P.nome INTO telefones_professor, nome FROM Professor P WHERE P.CPF = '85619370518';
 
   IF telefones_professor.count > 1 THEN
       DBMS_OUTPUT.PUT_LINE('Primeiro telefone do professor ' || nome || ' = ' || telefones_professor(1).telefone_pessoa || '. Mas ele possui ' || telefones_professor.count || ' telefones.');
