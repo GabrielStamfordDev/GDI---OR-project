@@ -28,7 +28,7 @@ SELECT s.CPF AS supervisor_cpf, s.nome AS supervisor_nome, COUNT(p.CPF) AS num_s
 /*
 
 
-CONSULTA A UM VARRAU
+CONSULTA A UM VARRAY
 CONSULTA 5: Consultar quantos telefones uma pessoa possui. Vou fazer uma consulta para um aluno e outra para um professor.
 */
 
@@ -68,8 +68,6 @@ BEGIN
 END;
 /
 
-SELECT A.nome, A.telefone(1) FROM Aluno A WHERE A.CPF = '12345678911';
-
 /* Uma forma mais elegante de fazer é usando um for para quando uma pesoa tiver mais de um telefone, eu conseguir printar todos, ao invés de somente o primeiro */
 
 DECLARE
@@ -95,3 +93,19 @@ EXCEPTION
     DBMS_OUTPUT.PUT_LINE('Aluno não encontrado.');
 END;
 /
+
+/*
+  CONSULTA A UMA NESTED TABLE
+  CONSULTA 6: Consultando todas as turmas e suas respectivas datas_aulas
+*/
+
+SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB;
+
+/*
+  CONSULTA A UMA NESTED TABLE MAIS ELEGANTE
+  CONSULTA 7: Consultando todas as turmas que têm mais de 2 datas_aulas e suas respectivas datas_aulas
+*/
+
+SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB WHERE (T.codigo_turma, T.codigo_disciplina) IN
+(SELECT T.codigo_turma, T.codigo_disciplina FROM Turma T, TABLE(T.lista_datas) TB
+GROUP BY T.codigo_turma, T.codigo_disciplina HAVING COUNT(*) > 2);
