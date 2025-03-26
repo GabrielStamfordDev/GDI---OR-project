@@ -126,12 +126,12 @@ BEGIN
     -- Pegando a sala com maior capacidade
     SELECT VALUE(S) INTO x 
     FROM tb_sala S 
-    WHERE S.local.predio = 'Predio E' AND S.local.num_sala = 'D009';
+    WHERE S.local.predio = 'Predio A' AND S.local.num_sala = 'D005';
 
     -- Comparando com outra sala
     SELECT S.comparaCapacidade(x) INTO n 
     FROM tb_sala S 
-    WHERE S.local.predio = 'Predio D' AND S.local.num_sala = 'D010';
+    WHERE S.local.predio = 'Prédio B' AND S.local.num_sala = 'E102';
 
     -- Verificando a comparação
     IF n > 0 THEN 
@@ -143,6 +143,67 @@ BEGIN
     ELSE 
          DBMS_OUTPUT.PUT_LINE('Sala em Predio D e numero de sala D010' || 
                              ' tem capacidade menor que a sala em ' || x.local.predio || ' e ' || x.local.num_sala);
+    END IF;
+END;
+/
+
+/*
+  CONSULTA 8.2: Ao invés de só comparar a capacidade de duas salas, vou fixar uma sala e compará-la com todas as demais no banco de dados
+*/
+  
+DECLARE
+    x sala_tp;
+    n INTEGER;
+    CURSOR c_salas IS SELECT VALUE(S) AS sala FROM tb_sala S; -- Cursor retorna um alias para evitar conflitos. Sem o alias dá errado.
+    sala_atual sala_tp;
+BEGIN
+    -- Pegando a sala fixa para comparação
+    SELECT VALUE(S) INTO x 
+    FROM tb_sala S 
+    WHERE S.local.predio = 'Prédio A' AND S.local.num_sala = 'D005';
+
+    FOR rec IN c_salas LOOP
+        sala_atual := rec.sala;  -- Agora 'rec' tem um alias 'sala' compatível
+
+        n := x.comparaCapacidade(sala_atual);
+
+        IF n > 0 THEN 
+            DBMS_OUTPUT.PUT_LINE('A sala ' || x.local.num_sala || ' - ' || x.local.predio ||
+                                ' tem capacidade maior que a sala ' || sala_atual.local.num_sala || ' - ' || sala_atual.local.predio);
+        ELSIF n = 0 THEN 
+            DBMS_OUTPUT.PUT_LINE('A sala ' || x.local.num_sala || ' - ' || x.local.predio ||
+                                ' tem capacidade igual à sala ' || sala_atual.local.num_sala || ' - ' || sala_atual.local.predio);
+        ELSE
+            DBMS_OUTPUT.PUT_LINE('A sala ' || x.local.num_sala || ' - ' || x.local.predio ||
+                                ' tem capacidade menor que a sala ' || sala_atual.local.num_sala || ' - ' || sala_atual.local.predio);
+        END IF;
+    END LOOP;
+END;
+/
+
+/*
+  CONSULTA 9: Checa se um professor já pode se aposentar ou não. O tempo para se aposentar foi baseado na internet, mas claro que na vida rea tem vários fatores.
+*/
+  
+DECLARE
+    v_professor tp_professor; 
+    v_idade INTEGER;
+    v_anos_servico INTEGER;
+BEGIN
+    SELECT VALUE (P) INTO v_professor FROM Professor P WHERE P.CPF='68913476523';
+
+    v_professor.dizer_idade;
+
+    v_idade := TRUNC(MONTHS_BETWEEN(SYSDATE, v_professor.data_nascimento) / 12);
+    v_anos_servico := TRUNC(MONTHS_BETWEEN(SYSDATE, v_professor.data_contratacao) / 12);
+
+    -- Avalia as condições de aposentadoria
+    IF v_idade < 62 THEN
+        DBMS_OUTPUT.PUT_LINE('Com certeza NÃO pode se aposentar.');
+    ELSIF v_idade >= 65 AND v_anos_servico >= 20 THEN
+        DBMS_OUTPUT.PUT_LINE('Com certeza PODE se aposentar.');
+    ELSIF v_idade >= 62 AND v_anos_servico < 20 THEN
+        DBMS_OUTPUT.PUT_LINE('Possivelmente, Depende do sexo e/ou do tempo de contribuição externo.');
     END IF;
 END;
 /
