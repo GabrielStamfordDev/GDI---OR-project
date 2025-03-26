@@ -106,6 +106,10 @@ SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS
   CONSULTA 7: Consultando todas as turmas que têm mais de 2 datas_aulas e suas respectivas datas_aulas
 */
 
-SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB WHERE (T.codigo_turma, T.codigo_disciplina) IN
-(SELECT T.codigo_turma, T.codigo_disciplina FROM Turma T, TABLE(T.lista_datas) TB
+SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB WHERE T.codigo_turma IN
+(SELECT T.codigo_turma FROM Turma T, TABLE(T.lista_datas) TB
 GROUP BY T.codigo_turma, T.codigo_disciplina HAVING COUNT(*) > 2);
+
+/*SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB WHERE (T.codigo_turma, T.codigo_disciplina) IN
+(SELECT T.codigo_turma, T.codigo_disciplina FROM Turma T, TABLE(T.lista_datas) TB
+GROUP BY T.codigo_turma, T.codigo_disciplina HAVING COUNT(*) > 2);*/
