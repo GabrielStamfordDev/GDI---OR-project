@@ -587,6 +587,15 @@ INSERT INTO Turma
   );
 INSERT INTO Turma 
   VALUES (
+    tp_turma('T01', 2, nt_data_aula(
+      tp_data_aula_turma(TO_DATE('08:00:00','HH24:MI:SS'), 'SEGUNDA'),
+      tp_data_aula_turma(TO_DATE('10:30:00','HH24:MI:SS'), 'QUARTA'),
+      tp_data_aula_turma(TO_DATE('11:30:00','HH24:MI:SS'), 'SEXTA')
+    ))
+  );
+
+INSERT INTO Turma 
+  VALUES (
     tp_turma('T10', 1, nt_data_aula(
       tp_data_aula_turma(TO_DATE('09:00:00','HH24:MI:SS'), 'TERÇA'),
       tp_data_aula_turma(TO_DATE('09:30:00','HH24:MI:SS'), 'QUINTA')
