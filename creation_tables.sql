@@ -434,7 +434,9 @@ INSERT INTO Turma VALUES(tp_turma('T01', 1, nt_data_aula(tp_data_aula_turma(TO_D
 
 --Checando 
 
-SELECT T.codigo_turma, T.codigo_disciplina, TB.* FROM Turma T, TABLE(T.lista_datas) TB;
+-- SELECT T.codigo_turma, T.codigo_disciplina, TB.* FROM Turma T, TABLE(T.lista_datas) TB;
+
+SELECT T.codigo_turma, T.codigo_disciplina, TO_CHAR(TB.horario, 'HH24:MI:SS') AS horario, TB.dia_semana FROM Turma T, TABLE(T.lista_datas) TB;
 
 --Se eu tentar inserir uma turma com codigo de disicplina que nao existe, da erro de integridade. eu testei e deu certo
 
