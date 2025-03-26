@@ -23,9 +23,11 @@ FROM Professor P WHERE P.CPF_supervisor IS NOT NULL;
 CONSULTA 4: Consultar quantos professores supervisionados cada professor supervisor tem:
 */
 
-SELECT s.CPF AS supervisor_cpf, s.nome AS supervisor_nome, COUNT(p.CPF) AS num_supervisadosFROM Professor p JOIN Professor s ON p.CPF_supervisor = REF(s) GROUP BY s.CPF, s.nome;
+SELECT s.CPF AS supervisor_cpf, s.nome AS supervisor_nome, COUNT(p.CPF) AS num_supervisados FROM Professor p JOIN Professor s ON p.CPF_supervisor = REF(s) GROUP BY s.CPF, s.nome;
 
 /*
+
+
 CONSULTA A UM VARRAU
 CONSULTA 5: Consultar quantos telefones uma pessoa possui. Vou fazer uma consulta para um aluno e outra para um professor.
 */
@@ -40,8 +42,10 @@ BEGIN
 
   IF telefones_aluno.count > 1 THEN
       DBMS_OUTPUT.PUT_LINE('Primeiro telefone do aluno ' || nome || ' = ' || telefones_aluno(1).telefone_pessoa || '. Mas ele possui ' || telefones_aluno.count || ' telefones.');
-  ELSIF telefones_aluno.count <= 1 THEN
+  ELSIF telefones_aluno.count = 1 THEN
       DBMS_OUTPUT.PUT_LINE('O aluno ' || nome || ' só tem um telefone = ' || telefones_aluno(1).telefone_pessoa);
+  ELSE
+    DBMS_OUTPUT.PUT_LINE('O aluno ' || nome || ' não possui telefones cadastrados.');
   END IF;
 END;
 /
@@ -56,8 +60,38 @@ BEGIN
 
   IF telefones_professor.count > 1 THEN
       DBMS_OUTPUT.PUT_LINE('Primeiro telefone do professor ' || nome || ' = ' || telefones_professor(1).telefone_pessoa || '. Mas ele possui ' || telefones_professor.count || ' telefones.');
-  ELSIF telefones_professor.count <= 1 THEN
+  ELSIF telefones_professor.count = 1 THEN
       DBMS_OUTPUT.PUT_LINE('O professor ' || nome || ' só tem um telefone = ' || telefones_professor(1).telefone_pessoa);
+  ELSE
+    DBMS_OUTPUT.PUT_LINE('O professor ' || nome || ' não possui telefones cadastrados.');
   END IF;
+END;
+/
+
+SELECT A.nome, A.telefone(1) FROM Aluno A WHERE A.CPF = '12345678911';
+
+/* Uma forma mais elegante de fazer é usando um for para quando uma pesoa tiver mais de um telefone, eu conseguir printar todos, ao invés de somente o primeiro */
+
+DECLARE
+  telefones_aluno Aluno.telefone%TYPE;
+  nome Aluno.nome%TYPE;
+BEGIN
+  SELECT A.telefone, A.nome INTO telefones_aluno, nome FROM Aluno A WHERE A.CPF = '12345678911';
+
+  IF telefones_aluno.count > 1 THEN
+      DBMS_OUTPUT.PUT_LINE('O aluno ' || nome || ' possui ' || telefones_aluno.count || ' telefones:');
+      
+      FOR i IN 1..telefones_aluno.count LOOP
+          DBMS_OUTPUT.PUT_LINE('- Telefone ' || i || ': ' || telefones_aluno(i).telefone_pessoa);
+      END LOOP;
+  
+  ELSIF telefones_aluno.count = 1 THEN
+      DBMS_OUTPUT.PUT_LINE('O aluno ' || nome || ' só tem um telefone: ' || telefones_aluno(1).telefone_pessoa);
+  ELSE
+      DBMS_OUTPUT.PUT_LINE('O aluno ' || nome || ' não possui telefones cadastrados.');
+  END IF;
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('Aluno não encontrado.');
 END;
 /
