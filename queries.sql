@@ -10,7 +10,7 @@ SELECT d.codigo_disciplina, d.nome_disciplina, DEREF(d.curso_ref).nome_curso AS 
 CONSULTA 2: Printar os cursos que têm mais de 2 alunos
 */
 
-SELECT DEREF(a.curso).nome_curso AS curso_nome, COUNT(CPF) AS quantidade_alunos FROM Aluno a GROUP BY a.curso.nome_curso HAVING COUNT(*) > 2;
+SELECT DEREF(a.curso).nome_curso AS curso_nome, COUNT(CPF) AS quantidade_alunos FROM Aluno a GROUP BY DEREF(a.curso).nome_curso HAVING COUNT(*) > 2;
 
 /*
 CONSULTA 3: Consultar todos os professores, que têm supervisores, e seus supervisores
