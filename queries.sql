@@ -13,11 +13,12 @@ CONSULTA 2: Printar os cursos que têm mais de 2 alunos
 SELECT DEREF(a.curso).nome_curso AS curso_nome, COUNT(CPF) AS quantidade_alunos FROM Aluno a GROUP BY DEREF(a.curso).nome_curso HAVING COUNT(*) > 2;
 
 /*
-CONSULTA 3: Consultar todos os professores, que têm supervisores, e seus supervisores
+USA O MAP FUNCTION DE PESSOA
+CONSULTA 3: Consultar todos os professores, que têm supervisores, e seus supervisores e ordená-los pela suas datas de nascimento
 */
 
-SELECT P.nome AS Nome_professor, P.CPF AS Cpf_professor, DEREF(P.CPF_supervisor).nome AS Nome_Supervisor, DEREF(P.CPF_supervisor).CPF AS CPF_Supervisor
-FROM Professor P WHERE P.CPF_supervisor IS NOT NULL;
+SELECT P.nome AS Nome_professor, P.CPF AS Cpf_professor, P.data_nascimento AS data_nascimento, DEREF(P.CPF_supervisor).nome AS Nome_Supervisor, DEREF(P.CPF_supervisor).CPF AS CPF_Supervisor
+FROM Professor P WHERE P.CPF_supervisor IS NOT NULL ORDER BY P.data_nasc();
 
 /*
 CONSULTA 4: Consultar quantos professores supervisionados cada professor supervisor tem:
@@ -207,3 +208,25 @@ BEGIN
     END IF;
 END;
 /
+
+
+/*
+CONSULTA 10: Usando o PROCEDURE dizer_idade de pessoa com aluno
+*/
+
+DECLARE
+    a tp_aluno;
+BEGIN
+    SELECT VALUE(A) INTO a 
+    FROM Aluno A
+    WHERE CPF = '56189023471';
+
+    a.dizer_idade();
+END;
+/
+
+/*
+CONSULTA 11: Usando a função dizer_tempo_estuda de aluno para os alunos que têm mais de 30 anos
+*/
+
+
