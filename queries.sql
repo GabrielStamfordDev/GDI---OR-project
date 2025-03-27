@@ -1,4 +1,10 @@
 /*
+JÁ FOI FEITO ANTERIORMENTE, MAS VOU INSERIR UMA SALA USANDO O CONSTRUTOR QUE CRIEI
+*/
+INSERT INTO tb_sala VALUES (sala_tp(local_Sala_tp('Prédio F', 'D011')));
+-- Para checar
+SELECT s.capacidade, s.local.predio, s.local.num_sala FROM tb_sala s WHERE s.local.predio = 'Prédio F' AND s.local.num_sala = 'D011';
+/*
 CONSULTA 1: Para cada disciplina, vou checar a qual curso ela pertence e o coordenador desse curso
 */
 
@@ -226,7 +232,7 @@ END;
 /
 
 /*
-CONSULTA 11: Usando a função dizer_tempo_estuda de aluno para os alunos que têm mais de 30 anos
+CONSULTA 11: Usando a função dizer_tempo_estuda de aluno para os alunos que estudam a mais de 2 anos
 */
 
-
+SELECT A.dizer_tempo_estuda(), A.nome, A.CPF FROM Aluno A WHERE A.dizer_tempo_estuda() > 2;
