@@ -133,7 +133,7 @@ BEGIN
     -- Pegando a sala com maior capacidade
     SELECT VALUE(S) INTO x 
     FROM tb_sala S 
-    WHERE S.local.predio = 'Predio A' AND S.local.num_sala = 'D005';
+    WHERE S.local.predio = 'Prédio A' AND S.local.num_sala = 'D005';
 
     -- Comparando com outra sala
     SELECT S.comparaCapacidade(x) INTO n 
